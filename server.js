@@ -69,7 +69,7 @@ app.post("/api/register", async (req, res) => {
     // Check if the email is already registered
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: "Email is already registered" });
+      return res.status(400).json({ error: "User with this email is already registered" });
     }
 
     // Hash the password
@@ -78,8 +78,8 @@ app.post("/api/register", async (req, res) => {
     // Create a new user
     const newUser = new User({ name, email, password: hashedPassword });
 
-    // Save the user to the "templateRegisteredUsers" collection
-    await newUser.save(collectionName);
+    // Save the user to the database
+    await newUser.save();
 
     // Generate JWT token
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET);
