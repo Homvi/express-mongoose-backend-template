@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const cors = require("cors");
 
 const port = 4000; // You can use any port number you prefer
 
@@ -10,6 +11,11 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
 
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization;
@@ -29,9 +35,11 @@ const verifyToken = (req, res, next) => {
 };
 
 // Database connection
-databaseUsername = process.env.DB_USERNAME;
-databasePassword = encodeURIComponent(process.env.DB_PASSWORD);
-const uri = `mongodb+srv://${databaseUsername}:${databasePassword}@firstcluster.9w2bn.mongodb.net`;
+const databaseUsername = process.env.DB_USERNAME;
+const databasePassword = encodeURIComponent(process.env.DB_PASSWORD);
+const databaseName = "templateUsersDB";
+const collectionName = "templateRegisteredUsers";
+const uri = `mongodb+srv://${databaseUsername}:${databasePassword}@firstcluster.9w2bn.mongodb.net/${databaseName}`;
 mongoose.connect(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -51,7 +59,7 @@ const userSchema = new mongoose.Schema({
   password: String,
 });
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema, collectionName);
 
 // Register route
 app.post("/api/register", async (req, res) => {
@@ -70,8 +78,8 @@ app.post("/api/register", async (req, res) => {
     // Create a new user
     const newUser = new User({ name, email, password: hashedPassword });
 
-    // Save the user to the database
-    await newUser.save();
+    // Save the user to the "templateRegisteredUsers" collection
+    await newUser.save(collectionName);
 
     // Generate JWT token
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET);
